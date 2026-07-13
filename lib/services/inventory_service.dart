@@ -1,31 +1,150 @@
 import '../models/product_model.dart';
 import '../models/marketplace_model.dart';
-import 'mongodb_service.dart';
 
-/// Service yang menjembatani UI (InventoryScreen) dengan MongoDBService.
-/// Mengubah Map mentah dari MongoDB jadi objek Product/InventoryStats yang tipenya jelas.
 class InventoryService {
-  /// Ambil semua produk sebagai List<Product>
+  // Dummy data produk
+  final List<Product> _dummyProducts = [
+    Product(
+      id: '1',
+      name: 'Kaos Polos Putih',
+      sku: 'KPP-001',
+      category: 'Pakaian',
+      stock: 150,
+      price: 75000,
+      status: 'Aktif',
+      marketplaces: ['Tokopedia', 'Shopee'],
+    ),
+    Product(
+      id: '2',
+      name: 'Celana Jeans Slim',
+      sku: 'CJS-002',
+      category: 'Pakaian',
+      stock: 3,
+      price: 250000,
+      status: 'Rendah',
+      marketplaces: ['Shopee'],
+    ),
+    Product(
+      id: '3',
+      name: 'Sepatu Sneakers',
+      sku: 'SS-003',
+      category: 'Sepatu',
+      stock: 0,
+      price: 450000,
+      status: 'Habis',
+      marketplaces: ['Tokopedia', 'Lazada'],
+    ),
+    Product(
+      id: '4',
+      name: 'Tas Ransel Canvas',
+      sku: 'TRC-004',
+      category: 'Tas',
+      stock: 45,
+      price: 180000,
+      status: 'Aktif',
+      marketplaces: ['Tokopedia', 'Shopee', 'Lazada'],
+    ),
+    Product(
+      id: '5',
+      name: 'Jaket Hoodie',
+      sku: 'JH-005',
+      category: 'Pakaian',
+      stock: 0,
+      price: 320000,
+      status: 'Habis',
+      marketplaces: ['Shopee'],
+    ),
+    Product(
+      id: '6',
+      name: 'Topi Baseball',
+      sku: 'TB-006',
+      category: 'Aksesoris',
+      stock: 80,
+      price: 95000,
+      status: 'Aktif',
+      marketplaces: ['Tokopedia'],
+    ),
+    Product(
+      id: '7',
+      name: 'Kemeja Flannel',
+      sku: 'KF-007',
+      category: 'Pakaian',
+      stock: 2,
+      price: 195000,
+      status: 'Rendah',
+      marketplaces: ['Shopee', 'Lazada'],
+    ),
+    Product(
+      id: '8',
+      name: 'Sandal Kulit',
+      sku: 'SK-008',
+      category: 'Sepatu',
+      stock: 60,
+      price: 135000,
+      status: 'Aktif',
+      marketplaces: ['Tokopedia', 'Shopee'],
+    ),
+    Product(
+      id: '9',
+      name: 'Dompet Kulit',
+      sku: 'DK-009',
+      category: 'Aksesoris',
+      stock: 25,
+      price: 210000,
+      status: 'Aktif',
+      marketplaces: ['Lazada'],
+    ),
+    Product(
+      id: '10',
+      name: 'Ikat Pinggang',
+      sku: 'IP-010',
+      category: 'Aksesoris',
+      stock: 4,
+      price: 85000,
+      status: 'Rendah',
+      marketplaces: ['Tokopedia', 'Shopee'],
+    ),
+    Product(
+      id: '11',
+      name: 'Kacamata Hitam',
+      sku: 'KH-011',
+      category: 'Aksesoris',
+      stock: 35,
+      price: 120000,
+      status: 'Aktif',
+      marketplaces: ['Shopee'],
+    ),
+    Product(
+      id: '12',
+      name: 'Sweater Rajut',
+      sku: 'SR-012',
+      category: 'Pakaian',
+      stock: 0,
+      price: 275000,
+      status: 'Habis',
+      marketplaces: ['Tokopedia', 'Lazada'],
+    ),
+  ];
+
   Future<List<Product>> getAllProducts() async {
-    final rawProducts = await MongoDBService.getAllProducts();
-    return rawProducts.map((map) => Product.fromMap(map)).toList();
+    // Simulasi delay network
+    await Future.delayed(const Duration(milliseconds: 500));
+    return _dummyProducts;
   }
 
-  /// Ambil statistik untuk kartu dashboard
   Future<InventoryStats> getStats() async {
-    final rawProducts = await MongoDBService.getAllProducts();
-    final products = rawProducts.map((map) => Product.fromMap(map)).toList();
+    await Future.delayed(const Duration(milliseconds: 300));
 
-    final totalProducts = products.length;
-    final outOfStock = products.where((p) => p.status == 'Habis').length;
-    final totalValue = products.fold<double>(
+    final totalProducts = _dummyProducts.length;
+    final outOfStock =
+        _dummyProducts.where((p) => p.status == 'Habis').length;
+    final totalValue = _dummyProducts.fold<double>(
       0,
       (sum, p) => sum + (p.price * p.stock),
     );
 
-    // Hitung jumlah marketplace unik yang dipakai dari seluruh produk
     final marketplaceSet = <String>{};
-    for (final p in products) {
+    for (final p in _dummyProducts) {
       marketplaceSet.addAll(p.marketplaces);
     }
 
@@ -37,23 +156,49 @@ class InventoryService {
     );
   }
 
-  /// Tambah produk baru
   Future<String?> addProduct(Product product) async {
-    return await MongoDBService.createProduct(product.toMap());
+    await Future.delayed(const Duration(milliseconds: 300));
+    _dummyProducts.add(product);
+    return product.id;
   }
 
-  /// Update produk
   Future<bool> updateProduct(String id, Product product) async {
-    return await MongoDBService.updateProduct(id, product.toMap());
+    await Future.delayed(const Duration(milliseconds: 300));
+    final index = _dummyProducts.indexWhere((p) => p.id == id);
+    if (index != -1) {
+      _dummyProducts[index] = product;
+      return true;
+    }
+    return false;
   }
 
-  /// Hapus produk
   Future<bool> deleteProduct(String id) async {
-    return await MongoDBService.deleteProduct(id);
+    await Future.delayed(const Duration(milliseconds: 300));
+    final index = _dummyProducts.indexWhere((p) => p.id == id);
+    if (index != -1) {
+      _dummyProducts.removeAt(index);
+      return true;
+    }
+    return false;
   }
 
-  /// Update stok produk
   Future<bool> updateStock(String id, int newStock) async {
-    return await MongoDBService.updateStock(id, newStock);
+    await Future.delayed(const Duration(milliseconds: 300));
+    final index = _dummyProducts.indexWhere((p) => p.id == id);
+    if (index != -1) {
+      final p = _dummyProducts[index];
+      _dummyProducts[index] = Product(
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        category: p.category,
+        stock: newStock,
+        price: p.price,
+        status: Product.statusFromStock(newStock),
+        marketplaces: p.marketplaces,
+      );
+      return true;
+    }
+    return false;
   }
 }
