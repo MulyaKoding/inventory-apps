@@ -4,7 +4,9 @@ import '../models/marketplace_model.dart';
 import '../services/inventory_service.dart';
 
 class InventoryScreen extends StatefulWidget {
-  const InventoryScreen({Key? key}) : super(key: key);
+  final VoidCallback? onBack;
+
+  const InventoryScreen({Key? key, this.onBack}) : super(key: key);
 
   @override
   State<InventoryScreen> createState() => _InventoryScreenState();
@@ -83,6 +85,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         shadowColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (widget.onBack != null) {
+              widget.onBack!();
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add_circle_outline),

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'inventory_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String? userName;
   final VoidCallback? onLogout;
+  final VoidCallback? onBack;
 
   const HomeScreen({
     Key? key,
     this.userName,
     this.onLogout,
+    this.onBack,
   }) : super(key: key);
 
   @override
@@ -223,22 +226,35 @@ class HomeScreen extends StatelessWidget {
                   ),
                   itemBuilder: (context, index) {
                     final feature = features[index];
-                    return _CompactFeatureCard(
-                      title: feature['title'] as String,
-                      icon: feature['icon'] as IconData,
-                      color: feature['color'] as Color,
+                    final title = feature['title'] as String;
+                    final icon = feature['icon'] as IconData;
+                    final color = feature['color'] as Color;
+                    
+                   return _CompactFeatureCard(
+                      title: title,
+                      icon: icon,
+                      color: color,
                       onTap: () {
-                        final title = feature['title'] as String;
-                        final icon = feature['icon'] as IconData;
-                        final color = feature['color'] as Color;
-                        Navigator.pop(context);
-                        _openFeatureDetail(
-                          context,
-                          title,
-                          'Deskripsi untuk $title',
-                          icon,
-                          color,
-                        );
+                        if (title == 'Master Barang') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => InventoryScreen(onBack: () {
+                                if (Navigator.canPop(context)) {
+                                  Navigator.pop(context);
+                                }
+                              }),
+                            ),
+                          );
+                        } else {
+                          _openFeatureDetail(
+                            context,
+                            title,
+                            'Deskripsi untuk $title',
+                            icon,
+                            color,
+                          );
+                        }
                       },
                     );
                   },
@@ -256,8 +272,9 @@ class HomeScreen extends StatelessWidget {
     String title,
     String description,
     IconData icon,
-    Color color,
-  ) {
+    Color color, [
+    VoidCallback? onBack,
+  ]) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -266,6 +283,7 @@ class HomeScreen extends StatelessWidget {
           description: description,
           icon: icon,
           color: color,
+          onBack: onBack,
         ),
       ),
     );
@@ -398,7 +416,7 @@ class HomeScreen extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ProfileScreen(userName: userName),
+        builder: (_) => ProfileScreen(userName: userName, onBack: onBack),
       ),
     );
   }
@@ -406,8 +424,9 @@ class HomeScreen extends StatelessWidget {
 
 class ProfileScreen extends StatelessWidget {
   final String? userName;
+  final VoidCallback? onBack;
 
-  const ProfileScreen({Key? key, this.userName}) : super(key: key);
+  const ProfileScreen({Key? key, this.userName, this.onBack}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -417,6 +436,16 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (onBack != null) {
+              onBack!();
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
       ),
       body: Center(
         child: Column(
@@ -467,6 +496,7 @@ class FeatureDetailScreen extends StatelessWidget {
   final String description;
   final IconData icon;
   final Color color;
+  final VoidCallback? onBack;
 
   const FeatureDetailScreen({
     Key? key,
@@ -474,6 +504,7 @@ class FeatureDetailScreen extends StatelessWidget {
     required this.description,
     required this.icon,
     required this.color,
+    this.onBack,
   }) : super(key: key);
 
   @override
@@ -492,6 +523,16 @@ class FeatureDetailScreen extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (onBack != null) {
+              onBack!();
+            } else {
+              Navigator.pop(context);
+            }
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
