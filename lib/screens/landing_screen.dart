@@ -8,11 +8,24 @@ class LandingScreen extends StatelessWidget {
     required this.onLoginPressed,
   }) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      body: SafeArea(
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFE8F0FE), // biru muda keunguan
+            Color(0xFFC1D7FA), // biru keabuan
+            Color(0xFF8BB9F5), // biru gelap keunguan
+            Color(0xFF5A9FD4), // biru medium keunguan
+          ],
+          stops: [0.0, 0.35, 0.65, 1.0],
+        ),
+      ),
+      child: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -144,7 +157,8 @@ class LandingScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }
 

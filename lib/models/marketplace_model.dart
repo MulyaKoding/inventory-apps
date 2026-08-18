@@ -38,4 +38,4 @@ class InventoryStats {
     required this.totalValue,
     required this.activeMarketplaces,
   });
-}
+} 
