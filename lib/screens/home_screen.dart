@@ -204,68 +204,44 @@ class HomeScreen extends StatelessWidget {
 
             LayoutBuilder(
               builder: (context, constraints) {
-                final width = constraints.maxWidth;
-                int crossAxisCount = (width >= 600) ? 2 : 1;
+                final List<Map<String, dynamic>> features = [
+                  {'title': 'Master Barang', 'icon': Icons.inventory_2_outlined, 'color': const Color(0xFF8B5CF6)},
+                  {'title': 'Stok Balance', 'icon': Icons.analytics_outlined, 'color': const Color(0xFF7C3AED)},
+                  {'title': 'Transaksi', 'icon': Icons.receipt_long_outlined, 'color': const Color(0xFFA78BFA)},
+                  {'title': 'Stok Opname', 'icon': Icons.fact_check_outlined, 'color': const Color(0xFFC084FC)},
+                ];
 
-                return GridView(
+          return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
+                  itemCount: features.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    mainAxisExtent: 110,
+                    mainAxisExtent: 120,
                   ),
-                  children: [
-                    _QuickActionCard(
-                      title: 'Master Barang',
-                      icon: Icons.inventory_2_outlined,
-                      color: const Color(0xFF8B5CF6),
-                      onTap: () => _openFeatureDetail(
-                        context,
-                        'Master Barang',
-                        'Kelola katalog produk, SKU, harga, dan kategori barang.',
-                        Icons.inventory_2_outlined,
-                        const Color(0xFF8B5CF6),
-                      ),
-                    ),
-                    _QuickActionCard(
-                      title: 'Stok Balance',
-                      icon: Icons.analytics_outlined,
-                      color: const Color(0xFF7C3AED),
-                      onTap: () => _openFeatureDetail(
-                        context,
-                        'Stok Balance',
-                        'Pantau saldo stok, tren pemakaian, dan kebutuhan restock.',
-                        Icons.analytics_outlined,
-                        const Color(0xFF7C3AED),
-                      ),
-                    ),
-                    _QuickActionCard(
-                      title: 'Transaksi',
-                      icon: Icons.receipt_long_outlined,
-                      color: const Color(0xFFA78BFA),
-                      onTap: () => _openFeatureDetail(
-                        context,
-                        'Transaksi',
-                        'Lihat aktivitas penjualan, pembelian, dan aktivitas harian.',
-                        Icons.receipt_long_outlined,
-                        const Color(0xFFA78BFA),
-                      ),
-                    ),
-                    _QuickActionCard(
-                      title: 'Stok Opname',
-                      icon: Icons.fact_check_outlined,
-                      color: const Color(0xFFC084FC),
-                      onTap: () => _openFeatureDetail(
-                        context,
-                        'Stok Opname',
-                        'Cek selisih stok aktual dan sistem untuk proses audit.',
-                        Icons.fact_check_outlined,
-                        const Color(0xFFC084FC),
-                      ),
-                    ),
-                  ],
+                  itemBuilder: (context, index) {
+                    final feature = features[index];
+                    return _CompactFeatureCard(
+                      title: feature['title'] as String,
+                      icon: feature['icon'] as IconData,
+                      color: feature['color'] as Color,
+                      onTap: () {
+                        final title = feature['title'] as String;
+                        final icon = feature['icon'] as IconData;
+                        final color = feature['color'] as Color;
+                        Navigator.pop(context);
+                        _openFeatureDetail(
+                          context,
+                          title,
+                          'Deskripsi untuk $title',
+                          icon,
+                          color,
+                        );
+                      },
+                    );
+                  },
                 );
               },
             ),
@@ -310,10 +286,10 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: Colors.blue.shade600,
+                    backgroundColor: Colors.purple.shade100,
                     child: const Icon(
                       Icons.person,
-                      color: Colors.white,
+                      color: Color(0xFF8B5CF6),
                       size: 28,
                     ),
                   ),
@@ -345,15 +321,12 @@ class HomeScreen extends StatelessWidget {
             ),
             const Divider(),
 
-            // Menu Items
             ListTile(
               leading: const Icon(Icons.person_outline),
               title: const Text('Profil'),
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Halaman profil akan segera hadir')),
-                );
+                _showProfilScreen(context);
               },
             ),
             ListTile(
@@ -417,6 +390,73 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showProfilScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(userName: userName),
+      ),
+    );
+  }
+}
+
+class ProfileScreen extends StatelessWidget {
+  final String? userName;
+
+  const ProfileScreen({Key? key, this.userName}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profil Pengguna'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 60,
+              backgroundColor: const Color(0xFF8B5CF6),
+              child: const Icon(
+                Icons.person,
+                color: Colors.white,
+                size: 48,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              userName ?? 'User',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Profil Pengguna',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 40),
+            const Text(
+              'Menu Profil akan segera hadir.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -702,13 +742,13 @@ class _CompactMetricCard extends StatelessWidget {
   }
 }
 
-class _QuickActionCard extends StatelessWidget {
+class _CompactFeatureCard extends StatelessWidget {
   final String title;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
 
-  const _QuickActionCard({
+  const _CompactFeatureCard({
     required this.title,
     required this.icon,
     required this.color,
@@ -720,37 +760,46 @@ class _QuickActionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(9),
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(
               title,
-              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 2),
+            const Text(
+              'Fitur aplikasi',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.grey,
               ),
             ),
           ],
