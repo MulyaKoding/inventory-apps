@@ -17,10 +17,10 @@ Widget build(BuildContext context) {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFE8F0FE), // biru muda keunguan
-            Color(0xFFC1D7FA), // biru keabuan
-            Color(0xFF8BB9F5), // biru gelap keunguan
-            Color(0xFF5A9FD4), // biru medium keunguan
+            Color(0xFFD9E8FC), // biru muda gelap
+            Color(0xFFB3CDE9), // biru keabuan gelap
+            Color(0xFF8FB3D3), // biru medium gelap
+            Color(0xFF6C99B9), // biru gelap
           ],
           stops: [0.0, 0.35, 0.65, 1.0],
         ),
@@ -67,7 +67,7 @@ Widget build(BuildContext context) {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Colors.white,
                   ),
                 ),
 
@@ -79,7 +79,7 @@ Widget build(BuildContext context) {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey,
+                    color: Colors.white70,
                     height: 1.5,
                   ),
                 ),
