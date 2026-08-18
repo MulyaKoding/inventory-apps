@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatefulWidget {
-  final Function(String email, String password) onLoginPressed;
+  final Function(String userName) onLoginPressed;
   final VoidCallback? onBackPressed;
 
   const LoginScreen({
@@ -112,15 +112,24 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        final explicitError = data?['error'] != null ||
+            data?['message']?.toString().toLowerCase().contains('failed') == true ||
+            data?['message']?.toString().toLowerCase().contains('error') == true;
+
         final success = data?['success'] == true ||
             data?['status'] == 'success' ||
             data?['message']?.toString().toLowerCase().contains('success') == true ||
             data?['token'] != null ||
             data?['accessToken'] != null ||
-            data?['data'] is Map && (data!['data']['token'] != null || data['data']['accessToken'] != null);
+            (data?['data'] is Map &&
+                (data!['data']['token'] != null ||
+                 data['data']['accessToken'] != null)) ||
+            !explicitError;
 
         if (success) {
-          widget.onLoginPressed(email, password);
+          // Extract user name from response
+          final userName = data?['user']?['name'] as String? ?? email;
+          widget.onLoginPressed(userName);
           return;
         }
       }

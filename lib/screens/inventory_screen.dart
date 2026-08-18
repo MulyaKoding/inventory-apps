@@ -112,7 +112,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ),
               const SizedBox(height: 24),
 
-              // ====== Statistics Cards (RESPONSIVE) ======
+              // ====== Statistics Cards (compact layout) ======
               FutureBuilder<InventoryStats>(
                 future: _statsFuture,
                 builder: (context, snapshot) {
@@ -121,50 +121,53 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   }
                   final stats = snapshot.data!;
 
+                  final items = [
+                    _CompactInventoryStatCard(
+                      label: 'Total Produk',
+                      value: '${stats.totalProducts}',
+                      icon: Icons.inventory_2_outlined,
+                      color: const Color(0xFF8B5CF6),
+                      bgColor: const Color(0xFFF5F3FF),
+                    ),
+                    _CompactInventoryStatCard(
+                      label: 'Stok Habis',
+                      value: '${stats.outOfStock}',
+                      icon: Icons.warning_amber_rounded,
+                      color: Colors.red,
+                      bgColor: const Color(0xFFFFEBEE),
+                    ),
+                    _CompactInventoryStatCard(
+                      label: 'Nilai Stok',
+                      value: _formatCurrency(stats.totalValue),
+                      icon: Icons.attach_money_rounded,
+                      color: const Color(0xFF9B6BFF),
+                      bgColor: const Color(0xFFEDE9FE),
+                    ),
+                    _CompactInventoryStatCard(
+                      label: 'Marketplace',
+                      value: '${stats.activeMarketplaces}',
+                      icon: Icons.storefront_outlined,
+                      color: const Color(0xFFC4B5FD),
+                      bgColor: const Color(0xFFF5F3FF),
+                    ),
+                  ];
+
                   return LayoutBuilder(
                     builder: (context, constraints) {
-                      final width = constraints.maxWidth;
-                      int crossAxisCount = (width >= 600) ? 2 : 1;
+                      final crossAxisCount = constraints.maxWidth < 600
+                          ? 2
+                          : constraints.maxWidth < 980
+                              ? 3
+                              : 4;
 
-                      return GridView(
+                      return GridView.count(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          mainAxisExtent: 140,
-                        ),
-                        children: [
-                          _InventoryStatCard(
-                            label: 'Total Produk',
-                            value: '${stats.totalProducts}',
-                            subtext: 'produk terdaftar',
-                            color: const Color(0xFF8B5CF6),
-                            bgColor: const Color(0xFFF5F3FF),
-                          ),
-                          _InventoryStatCard(
-                            label: 'Stok Habis',
-                            value: '${stats.outOfStock}',
-                            subtext: 'perlu restock',
-                            color: Colors.red,
-                            bgColor: const Color(0xFFFFEBEE),
-                          ),
-                          _InventoryStatCard(
-                            label: 'Nilai Stok',
-                            value: _formatCurrency(stats.totalValue),
-                            subtext: 'Total aset inventory',
-                            color: const Color(0xFF9B6BFF),
-                            bgColor: const Color(0xFFEDE9FE),
-                          ),
-                          _InventoryStatCard(
-                            label: 'Marketplace',
-                            value: '${stats.activeMarketplaces}',
-                            subtext: 'Platform aktif',
-                            color: const Color(0xFFC4B5FD),
-                            bgColor: const Color(0xFFF5F3FF),
-                          ),
-                        ],
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: constraints.maxWidth < 600 ? 1.9 : 2.4,
+                        children: items,
                       );
                     },
                   );
@@ -550,17 +553,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
 }
 
 // Inventory Stat Card Widget
-class _InventoryStatCard extends StatelessWidget {
+class _CompactInventoryStatCard extends StatelessWidget {
   final String label;
   final String value;
-  final String subtext;
+  final IconData icon;
   final Color color;
   final Color bgColor;
 
-  const _InventoryStatCard({
+  const _CompactInventoryStatCard({
     required this.label,
     required this.value,
-    required this.subtext,
+    required this.icon,
     required this.color,
     required this.bgColor,
   });
@@ -568,82 +571,57 @@ class _InventoryStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               color: bgColor,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(9),
             ),
-            child: Icon(
-              _getIconForLabel(label),
-              color: color,
-              size: 24,
-            ),
+            child: Icon(icon, color: color, size: 17),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtext,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.grey[500],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
-  }
-
-  IconData _getIconForLabel(String label) {
-    switch (label) {
-      case 'Total Produk':
-        return Icons.shopping_bag_outlined;
-      case 'Stok Habis':
-        return Icons.warning_outlined;
-      case 'Nilai Stok':
-        return Icons.attach_money_outlined;
-      case 'Marketplace':
-        return Icons.store_outlined;
-      default:
-        return Icons.info_outlined;
-    }
   }
 }
