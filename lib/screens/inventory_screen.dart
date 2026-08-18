@@ -48,7 +48,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   String _formatCurrency(double value) {
     if (value >= 1000000) {
       return 'Rp ${(value / 1000000).toStringAsFixed(0)}M';
-    } else if (value >= 1000) {
+    } else if (value >= 1000) { 
       return 'Rp ${(value / 1000).toStringAsFixed(0)}K';
     }
     return 'Rp ${value.toStringAsFixed(0)}';
@@ -72,10 +72,27 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Inventory Marketplace'),
+        title: const Text(
+          'Inventory',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        shadowColor: Colors.transparent,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Fitur Tambah Produk akan segera hadir')),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -85,13 +102,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
             children: [
               // Header
               const Text(
-                'Dashboard Inventory',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                'Daftar Produk',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 'Kelola stok produk dan data marketplace Anda',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
               ),
               const SizedBox(height: 24),
 
@@ -107,17 +124,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   return LayoutBuilder(
                     builder: (context, constraints) {
                       final width = constraints.maxWidth;
-
-                      int crossAxisCount;
-                      if (width >= 1000) {
-                        crossAxisCount = 4;
-                      } else if (width >= 700) {
-                        crossAxisCount = 3;
-                      } else if (width >= 480) {
-                        crossAxisCount = 2;
-                      } else {
-                        crossAxisCount = 1;
-                      }
+                      int crossAxisCount = (width >= 600) ? 2 : 1;
 
                       return GridView(
                         shrinkWrap: true,
@@ -126,30 +133,36 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           crossAxisCount: crossAxisCount,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
-                          // tinggi card fixed, gak lagi kepanjangan
-                          mainAxisExtent: 110,
+                          mainAxisExtent: 140,
                         ),
                         children: [
-                          _StatCard(
+                          _InventoryStatCard(
                             label: 'Total Produk',
                             value: '${stats.totalProducts}',
                             subtext: 'produk terdaftar',
+                            color: const Color(0xFF8B5CF6),
+                            bgColor: const Color(0xFFF5F3FF),
                           ),
-                          _StatCard(
+                          _InventoryStatCard(
                             label: 'Stok Habis',
                             value: '${stats.outOfStock}',
                             subtext: 'perlu restock',
                             color: Colors.red,
+                            bgColor: const Color(0xFFFFEBEE),
                           ),
-                          _StatCard(
+                          _InventoryStatCard(
                             label: 'Nilai Stok',
                             value: _formatCurrency(stats.totalValue),
                             subtext: 'Total aset inventory',
+                            color: const Color(0xFF9B6BFF),
+                            bgColor: const Color(0xFFEDE9FE),
                           ),
-                          _StatCard(
+                          _InventoryStatCard(
                             label: 'Marketplace',
                             value: '${stats.activeMarketplaces}',
                             subtext: 'Platform aktif',
+                            color: const Color(0xFFC4B5FD),
+                            bgColor: const Color(0xFFF5F3FF),
                           ),
                         ],
                       );
@@ -169,24 +182,28 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     decoration: InputDecoration(
                       hintText: 'Cari produk atau SKU...',
                       prefixIcon: const Icon(Icons.search),
+                      filled: true,
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: Colors.grey[300]!),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
+                          horizontal: 12, vertical: 12),
                     ),
                   );
 
                   final statusDropdown = DropdownButtonFormField<String>(
                     value: _selectedStatus,
                     decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: Colors.grey[300]!),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
+                          horizontal: 12, vertical: 12),
                     ),
                     items: const [
                       DropdownMenuItem(
@@ -203,25 +220,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     },
                   );
 
-                  final addButton = ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content:
-                                Text('Fitur Tambah Produk akan segera hadir')),
-                      );
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Tambah Produk'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                    ),
-                  );
-
-                  // Di layar sempit, susun vertikal supaya tidak overflow
+                  // Di layar sempit, susun vertikal
                   if (isNarrow) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -229,8 +228,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         searchField,
                         const SizedBox(height: 12),
                         statusDropdown,
-                        const SizedBox(height: 12),
-                        addButton,
                       ],
                     );
                   }
@@ -240,8 +237,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       Expanded(flex: 2, child: searchField),
                       const SizedBox(width: 12),
                       Expanded(child: statusDropdown),
-                      const SizedBox(width: 12),
-                      addButton,
                     ],
                   );
                 },
@@ -554,18 +549,20 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 }
 
-// Stat Card Widget
-class _StatCard extends StatelessWidget {
+// Inventory Stat Card Widget
+class _InventoryStatCard extends StatelessWidget {
   final String label;
   final String value;
   final String subtext;
-  final Color? color;
+  final Color color;
+  final Color bgColor;
 
-  const _StatCard({
+  const _InventoryStatCard({
     required this.label,
     required this.value,
     required this.subtext,
-    this.color,
+    required this.color,
+    required this.bgColor,
   });
 
   @override
@@ -573,42 +570,80 @@ class _StatCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(8),
             ),
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: color ?? Colors.black,
+            child: Icon(
+              _getIconForLabel(label),
+              color: color,
+              size: 24,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 2),
-          Text(
-            subtext,
-            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-            overflow: TextOverflow.ellipsis,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtext,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  IconData _getIconForLabel(String label) {
+    switch (label) {
+      case 'Total Produk':
+        return Icons.shopping_bag_outlined;
+      case 'Stok Habis':
+        return Icons.warning_outlined;
+      case 'Nilai Stok':
+        return Icons.attach_money_outlined;
+      case 'Marketplace':
+        return Icons.store_outlined;
+      default:
+        return Icons.info_outlined;
+    }
   }
 }

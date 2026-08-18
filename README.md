@@ -1,4 +1,4 @@
-# Inventory Marketplace
+# Inventa
 
 Aplikasi manajemen inventory produk untuk multi-marketplace, dibangun dengan Flutter dan MongoDB.
 

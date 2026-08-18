@@ -1,5 +1,5 @@
 name: marketplace_inventory
-description: "Aplikasi Inventory Marketplace dengan Flutter dan MongoDB"
+description: "Aplikasi Inventa dengan Flutter dan MongoDB"
 
 publish_to: 'none'
 
@@ -35,6 +35,9 @@ dependencies:
   # Local Storage
   shared_preferences: ^2.2.2
   hive: ^2.2.3
+
+  # Typography
+  google_fonts: ^6.2.1
 
   # Date & Time
   intl: ^0.19.0
