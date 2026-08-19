@@ -251,13 +251,7 @@ class HomeScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => InventoryScreen(
-                                onBack: () {
-                                  if (Navigator.canPop(context)) {
-                                    Navigator.pop(context);
-                                  }
-                                },
-                              ),
+                              builder: (_) => const InventoryScreen(),
                             ),
                           );
                         } else {
