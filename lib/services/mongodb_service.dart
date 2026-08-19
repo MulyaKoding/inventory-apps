@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:mongo_dart/mongo_dart.dart';
 
 class MongoDBService {
@@ -24,9 +25,9 @@ class MongoDBService {
       _db = await Db.create(connectionString);
       await _db!.open();
       _productsCollection = _db!.collection('products');
-      print('✅ MongoDB Connected Successfully');
+      developer.log('✅ MongoDB Connected Successfully', name: 'MongoDBService');
     } catch (e) {
-      print('❌ MongoDB Connection Error: $e');
+      developer.log('❌ MongoDB Connection Error: $e', name: 'MongoDBService');
       rethrow;
     }
   }
@@ -36,10 +37,10 @@ class MongoDBService {
     try {
       if (_db != null) {
         await _db!.close();
-        print('✅ MongoDB Disconnected');
+        developer.log('✅ MongoDB Disconnected', name: 'MongoDBService');
       }
     } catch (e) {
-      print('❌ MongoDB Disconnect Error: $e');
+      developer.log('❌ MongoDB Disconnect Error: $e', name: 'MongoDBService');
       rethrow;
     }
   }
@@ -50,7 +51,7 @@ class MongoDBService {
       final products = await _productsCollection!.find().toList();
       return products;
     } catch (e) {
-      print('❌ Error fetching products: $e');
+      developer.log('❌ Error fetching products: $e', name: 'MongoDBService');
       rethrow;
     }
   }
@@ -58,11 +59,12 @@ class MongoDBService {
   /// Get produk by ID
   static Future<Map<String, dynamic>?> getProductById(String id) async {
     try {
-      final product =
-          await _productsCollection!.findOne(where.id(ObjectId.fromHexString(id)));
+      final product = await _productsCollection!
+          .findOne(where.id(ObjectId.fromHexString(id)));
       return product;
     } catch (e) {
-      print('❌ Error fetching product by id: $e');
+      developer.log('❌ Error fetching product by id: $e',
+          name: 'MongoDBService');
       rethrow;
     }
   }
@@ -71,10 +73,11 @@ class MongoDBService {
   static Future<String?> createProduct(Map<String, dynamic> productData) async {
     try {
       final result = await _productsCollection!.insertOne(productData);
-      print('✅ Product created with ID: ${result.id}');
+      developer.log('✅ Product created with ID: ${result.id}',
+          name: 'MongoDBService');
       return result.id.toString();
     } catch (e) {
-      print('❌ Error creating product: $e');
+      developer.log('❌ Error creating product: $e', name: 'MongoDBService');
       rethrow;
     }
   }
@@ -99,11 +102,12 @@ class MongoDBService {
         where.id(ObjectId.fromHexString(id)),
         _buildSetModifier(productData),
       );
-      print(
-          '✅ Product updated. Matched: ${result.nMatched}, Modified: ${result.nModified}');
+      developer.log(
+          '✅ Product updated. Matched: ${result.nMatched}, Modified: ${result.nModified}',
+          name: 'MongoDBService');
       return result.nModified > 0;
     } catch (e) {
-      print('❌ Error updating product: $e');
+      developer.log('❌ Error updating product: $e', name: 'MongoDBService');
       rethrow;
     }
   }
@@ -114,10 +118,11 @@ class MongoDBService {
       final result = await _productsCollection!.deleteOne(
         where.id(ObjectId.fromHexString(id)),
       );
-      print('✅ Product deleted. Deleted count: ${result.nRemoved}');
+      developer.log('✅ Product deleted. Deleted count: ${result.nRemoved}',
+          name: 'MongoDBService');
       return result.nRemoved > 0;
     } catch (e) {
-      print('❌ Error deleting product: $e');
+      developer.log('❌ Error deleting product: $e', name: 'MongoDBService');
       rethrow;
     }
   }
@@ -132,7 +137,7 @@ class MongoDBService {
           .toList();
       return products;
     } catch (e) {
-      print('❌ Error searching products: $e');
+      developer.log('❌ Error searching products: $e', name: 'MongoDBService');
       rethrow;
     }
   }
@@ -149,7 +154,8 @@ class MongoDBService {
           .toList();
       return products;
     } catch (e) {
-      print('❌ Error fetching products by status: $e');
+      developer.log('❌ Error fetching products by status: $e',
+          name: 'MongoDBService');
       rethrow;
     }
   }
@@ -160,7 +166,7 @@ class MongoDBService {
       final count = await _productsCollection!.count();
       return count;
     } catch (e) {
-      print('❌ Error counting products: $e');
+      developer.log('❌ Error counting products: $e', name: 'MongoDBService');
       rethrow;
     }
   }
@@ -175,7 +181,7 @@ class MongoDBService {
       );
       return result.nModified > 0;
     } catch (e) {
-      print('❌ Error updating stock: $e');
+      developer.log('❌ Error updating stock: $e', name: 'MongoDBService');
       rethrow;
     }
   }

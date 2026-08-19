@@ -6,7 +6,7 @@ import '../services/inventory_service.dart';
 class InventoryScreen extends StatefulWidget {
   final VoidCallback? onBack;
 
-  const InventoryScreen({Key? key, this.onBack}) : super(key: key);
+  const InventoryScreen({super.key, this.onBack});
 
   @override
   State<InventoryScreen> createState() => _InventoryScreenState();
@@ -50,7 +50,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   String _formatCurrency(double value) {
     if (value >= 1000000) {
       return 'Rp ${(value / 1000000).toStringAsFixed(0)}M';
-    } else if (value >= 1000) { 
+    } else if (value >= 1000) {
       return 'Rp ${(value / 1000).toStringAsFixed(0)}K';
     }
     return 'Rp ${value.toStringAsFixed(0)}';
@@ -100,7 +100,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
             icon: const Icon(Icons.add_circle_outline),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Fitur Tambah Produk akan segera hadir')),
+                const SnackBar(
+                  content: Text('Fitur Tambah Produk akan segera hadir'),
+                ),
               );
             },
           ),
@@ -178,7 +180,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         crossAxisCount: crossAxisCount,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
-                        childAspectRatio: constraints.maxWidth < 600 ? 1.9 : 2.4,
+                        childAspectRatio:
+                            constraints.maxWidth < 600 ? 1.9 : 2.4,
                         children: items,
                       );
                     },
@@ -209,7 +212,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   );
 
                   final statusDropdown = DropdownButtonFormField<String>(
-                    value: _selectedStatus,
+                    initialValue: _selectedStatus,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white,
@@ -284,8 +287,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   }
 
                   if (_selectedStatus != 'Semua Status') {
-                    products =
-                        products.where((p) => p.status == _selectedStatus).toList();
+                    products = products
+                        .where((p) => p.status == _selectedStatus)
+                        .toList();
                   }
 
                   int totalPages = (products.length / _itemsPerPage).ceil();
@@ -314,8 +318,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             ),
                           ),
                           padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: const [
+                          child: const Row(
+                            children: [
                               SizedBox(
                                   width: 160,
                                   child: Text('Produk',
@@ -365,8 +369,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           return Container(
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              border:
-                                  Border(bottom: BorderSide(color: Colors.grey[300]!)),
+                              border: Border(
+                                  bottom: BorderSide(color: Colors.grey[300]!)),
                             ),
                             padding: const EdgeInsets.all(16),
                             child: Row(
@@ -374,7 +378,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 SizedBox(
                                   width: 160,
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(product.name,
                                           style: const TextStyle(
@@ -389,7 +394,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                 SizedBox(
                                   width: 90,
                                   child: Text(product.sku,
-                                      style: TextStyle(color: Colors.grey[600])),
+                                      style:
+                                          TextStyle(color: Colors.grey[600])),
                                 ),
                                 SizedBox(
                                   width: 60,
@@ -413,9 +419,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                       runSpacing: 4,
                                       children: product.marketplaces
                                           .map((m) => Container(
-                                                padding: const EdgeInsets
-                                                    .symmetric(
-                                                    horizontal: 6, vertical: 2),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 2),
                                                 decoration: BoxDecoration(
                                                   color: Colors.blue[100],
                                                   borderRadius:
@@ -424,7 +431,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                                 child: Text(m,
                                                     style: TextStyle(
                                                         fontSize: 12,
-                                                        color: Colors.blue[700])),
+                                                        color:
+                                                            Colors.blue[700])),
                                               ))
                                           .toList(),
                                     ),
@@ -438,7 +446,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                           horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: _getStatusColor(product.status)
-                                            .withOpacity(0.2),
+                                            .withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -446,7 +454,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,
-                                          color: _getStatusColor(product.status),
+                                          color:
+                                              _getStatusColor(product.status),
                                         ),
                                       ),
                                     ),
@@ -456,26 +465,27 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                   width: 80,
                                   child: Center(
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         IconButton(
                                           icon: const Icon(Icons.edit),
                                           iconSize: 18,
-                                          onPressed: () =>
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(SnackBar(
-                                                      content: Text(
-                                                          'Edit ${product.name}'))),
+                                          onPressed: () => ScaffoldMessenger.of(
+                                                  context)
+                                              .showSnackBar(SnackBar(
+                                                  content: Text(
+                                                      'Edit ${product.name}'))),
                                         ),
                                         IconButton(
                                           icon: const Icon(Icons.delete),
                                           iconSize: 18,
                                           color: Colors.red,
-                                          onPressed: () =>
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(SnackBar(
-                                                      content: Text(
-                                                          'Hapus ${product.name}'))),
+                                          onPressed: () => ScaffoldMessenger.of(
+                                                  context)
+                                              .showSnackBar(SnackBar(
+                                                  content: Text(
+                                                      'Hapus ${product.name}'))),
                                         ),
                                       ],
                                     ),
@@ -484,7 +494,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               ],
                             ),
                           );
-                        }).toList(),
+                        }),
 
                         // Pagination
                         const SizedBox(height: 16),
@@ -495,8 +505,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             children: [
                               Text(
                                 'Menampilkan ${startIndex + 1}-${endIndex > products.length ? products.length : endIndex} dari ${products.length} produk',
-                                style:
-                                    TextStyle(fontSize: 13, color: Colors.grey[600]),
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.grey[600]),
                               ),
                               Row(
                                 children: [
@@ -507,15 +517,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor: Colors.black,
-                                      side: BorderSide(color: Colors.grey[300]!),
+                                      side:
+                                          BorderSide(color: Colors.grey[300]!),
                                     ),
                                     child: const Text('← Sebelumnya'),
                                   ),
                                   const SizedBox(width: 8),
-                                  for (int i = 1; i <= totalPages && i <= 3; i++)
+                                  for (int i = 1;
+                                      i <= totalPages && i <= 3;
+                                      i++)
                                     Padding(
-                                      padding:
-                                          const EdgeInsets.symmetric(horizontal: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 4),
                                       child: ElevatedButton(
                                         onPressed: () =>
                                             setState(() => _currentPage = i),
@@ -542,7 +555,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.white,
                                       foregroundColor: Colors.black,
-                                      side: BorderSide(color: Colors.grey[300]!),
+                                      side:
+                                          BorderSide(color: Colors.grey[300]!),
                                     ),
                                     child: const Text('Selanjutnya →'),
                                   ),
@@ -590,7 +604,7 @@ class _CompactInventoryStatCard extends StatelessWidget {
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

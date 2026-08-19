@@ -8,10 +8,10 @@ class LoginScreen extends StatefulWidget {
   final VoidCallback? onBackPressed;
 
   const LoginScreen({
-    Key? key,
+    super.key,
     required this.onLoginPressed,
     this.onBackPressed,
-  }) : super(key: key);
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -114,29 +114,32 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final explicitError = data?['error'] != null ||
-            data?['message']?.toString().toLowerCase().contains('failed') == true ||
-            data?['message']?.toString().toLowerCase().contains('error') == true;
+            data?['message']?.toString().toLowerCase().contains('failed') ==
+                true ||
+            data?['message']?.toString().toLowerCase().contains('error') ==
+                true;
 
         final success = data?['success'] == true ||
             data?['status'] == 'success' ||
-            data?['message']?.toString().toLowerCase().contains('success') == true ||
+            data?['message']?.toString().toLowerCase().contains('success') ==
+                true ||
             data?['token'] != null ||
             data?['accessToken'] != null ||
             (data?['data'] is Map &&
                 (data!['data']['token'] != null ||
-                 data['data']['accessToken'] != null)) ||
+                    data['data']['accessToken'] != null)) ||
             !explicitError;
 
         if (success) {
           // Extract user name from response
           final userName = data?['user']?['name'] as String?;
-          
+
           // Save user name to local storage (SharedPreferences)
           if (userName != null) {
             final prefs = await SharedPreferences.getInstance();
             await prefs.setString('userName', userName);
           }
-          
+
           widget.onLoginPressed(userName ?? email);
           return;
         }
@@ -321,7 +324,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     elevation: 4,
-                    shadowColor: const Color(0xFF8B5CF6).withOpacity(0.28),
+                    shadowColor:
+                        const Color(0xFF8B5CF6).withValues(alpha: 0.28),
                   ),
                   child: _isLoading
                       ? const SizedBox(

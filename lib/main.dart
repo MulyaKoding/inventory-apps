@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'screens/landing_screen.dart';
 import 'screens/login_screen.dart';
@@ -9,11 +9,29 @@ import 'screens/inventory_screen.dart';
 import 'utils/theme.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Android 15+ (API 35+) memaksa mode edge-to-edge dan mengabaikan
+  // systemNavigationBarColor manual. Solusinya: aktifkan edge-to-edge
+  // dan buat status bar + navigation bar TRANSPARAN, supaya gradient
+  // aplikasi yang terlihat tembus di baliknya (bukan warna solid dari OS).
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarContrastEnforced: false,
+    ),
+  );
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +47,7 @@ class MyApp extends StatelessWidget {
 }
 
 class AuthWrapper extends StatefulWidget {
-  const AuthWrapper({Key? key}) : super(key: key);
+  const AuthWrapper({super.key});
 
   @override
   State<AuthWrapper> createState() => _AuthWrapperState();
@@ -111,10 +129,10 @@ class MainNavigation extends StatefulWidget {
   final VoidCallback onLogout;
 
   const MainNavigation({
-    Key? key,
+    super.key,
     this.userName,
     required this.onLogout,
-  }) : super(key: key);
+  });
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -258,7 +276,7 @@ class _FeatureScreen extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [accentColor, accentColor.withOpacity(0.8)],
+                  colors: [accentColor, accentColor.withValues(alpha: 0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -269,7 +287,7 @@ class _FeatureScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(icon, color: Colors.white, size: 30),
@@ -313,11 +331,14 @@ class _FeatureScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Expanded(
               child: ListView(
-                children: [
+                children: const [
                   _PreviewTile(label: 'Data produk', value: '128 item'),
                   _PreviewTile(label: 'Stok tersedia', value: '89 tersedia'),
                   _PreviewTile(label: 'Perlu restock', value: '12 item'),
-                  _PreviewTile(label: 'Transaksi hari ini', value: '24 aktivitas'),
+                  _PreviewTile(
+                    label: 'Transaksi hari ini',
+                    value: '24 aktivitas',
+                  ),
                 ],
               ),
             ),

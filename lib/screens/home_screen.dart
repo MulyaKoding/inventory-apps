@@ -7,11 +7,11 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback? onBack;
 
   const HomeScreen({
-    Key? key,
+    super.key,
     this.userName,
     this.onLogout,
     this.onBack,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,10 +40,10 @@ class HomeScreen extends StatelessWidget {
                 },
                 child: Row(
                   children: [
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 18,
-                      backgroundColor: const Color(0xFF8B5CF6),
-                      child: const Icon(
+                      backgroundColor: Color(0xFF8B5CF6),
+                      child: Icon(
                         Icons.person,
                         color: Colors.white,
                         size: 20,
@@ -75,7 +75,7 @@ class HomeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF7C3AED).withOpacity(0.22),
+                    color: const Color(0xFF7C3AED).withValues(alpha: 0.22),
                     blurRadius: 14,
                     offset: const Offset(0, 8),
                   ),
@@ -102,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.12),
+                          color: Colors.white.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: const Text(
@@ -137,13 +137,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-
             const Text(
               'Ringkasan Stock',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-
             LayoutBuilder(
               builder: (context, constraints) {
                 final width = constraints.maxWidth;
@@ -190,7 +188,6 @@ class HomeScreen extends StatelessWidget {
               },
             ),
             const SizedBox(height: 30),
-
             const Text(
               'Menu Fitur',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -204,17 +201,32 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-
             LayoutBuilder(
               builder: (context, constraints) {
                 final List<Map<String, dynamic>> features = [
-                  {'title': 'Master Barang', 'icon': Icons.inventory_2_outlined, 'color': const Color(0xFF8B5CF6)},
-                  {'title': 'Stok Balance', 'icon': Icons.analytics_outlined, 'color': const Color(0xFF7C3AED)},
-                  {'title': 'Transaksi', 'icon': Icons.receipt_long_outlined, 'color': const Color(0xFFA78BFA)},
-                  {'title': 'Stok Opname', 'icon': Icons.fact_check_outlined, 'color': const Color(0xFFC084FC)},
+                  {
+                    'title': 'Master Barang',
+                    'icon': Icons.inventory_2_outlined,
+                    'color': const Color(0xFF8B5CF6),
+                  },
+                  {
+                    'title': 'Stok Balance',
+                    'icon': Icons.analytics_outlined,
+                    'color': const Color(0xFF7C3AED),
+                  },
+                  {
+                    'title': 'Transaksi',
+                    'icon': Icons.receipt_long_outlined,
+                    'color': const Color(0xFFA78BFA),
+                  },
+                  {
+                    'title': 'Stok Opname',
+                    'icon': Icons.fact_check_outlined,
+                    'color': const Color(0xFFC084FC),
+                  },
                 ];
 
-          return GridView.builder(
+                return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: features.length,
@@ -229,8 +241,8 @@ class HomeScreen extends StatelessWidget {
                     final title = feature['title'] as String;
                     final icon = feature['icon'] as IconData;
                     final color = feature['color'] as Color;
-                    
-                   return _CompactFeatureCard(
+
+                    return _CompactFeatureCard(
                       title: title,
                       icon: icon,
                       color: color,
@@ -239,11 +251,13 @@ class HomeScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => InventoryScreen(onBack: () {
-                                if (Navigator.canPop(context)) {
-                                  Navigator.pop(context);
-                                }
-                              }),
+                              builder: (_) => InventoryScreen(
+                                onBack: () {
+                                  if (Navigator.canPop(context)) {
+                                    Navigator.pop(context);
+                                  }
+                                },
+                              ),
                             ),
                           );
                         } else {
@@ -353,7 +367,9 @@ class HomeScreen extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Halaman pengaturan akan segera hadir')),
+                  const SnackBar(
+                    content: Text('Halaman pengaturan akan segera hadir'),
+                  ),
                 );
               },
             ),
@@ -363,7 +379,9 @@ class HomeScreen extends StatelessWidget {
               onTap: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Halaman bantuan akan segera hadir')),
+                  const SnackBar(
+                    content: Text('Halaman bantuan akan segera hadir'),
+                  ),
                 );
               },
             ),
@@ -426,7 +444,7 @@ class ProfileScreen extends StatelessWidget {
   final String? userName;
   final VoidCallback? onBack;
 
-  const ProfileScreen({Key? key, this.userName, this.onBack}) : super(key: key);
+  const ProfileScreen({super.key, this.userName, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -451,10 +469,10 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 60,
-              backgroundColor: const Color(0xFF8B5CF6),
-              child: const Icon(
+              backgroundColor: Color(0xFF8B5CF6),
+              child: Icon(
                 Icons.person,
                 color: Colors.white,
                 size: 48,
@@ -499,13 +517,13 @@ class FeatureDetailScreen extends StatelessWidget {
   final VoidCallback? onBack;
 
   const FeatureDetailScreen({
-    Key? key,
+    super.key,
     required this.title,
     required this.description,
     required this.icon,
     required this.color,
     this.onBack,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -544,7 +562,7 @@ class FeatureDetailScreen extends StatelessWidget {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [color, color.withOpacity(0.8)],
+                  colors: [color, color.withValues(alpha: 0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -555,7 +573,7 @@ class FeatureDetailScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.14),
+                      color: Colors.white.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(icon, color: Colors.white, size: 32),
@@ -656,14 +674,14 @@ class FeatureDetailScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.grey.shade200),
               ),
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Fitur ini masih berupa halaman mockup untuk desain awal.',
                     style: TextStyle(fontSize: 14, color: Colors.black87),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -695,7 +713,7 @@ class _ActionPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.deepPurple.withOpacity(0.08),
+        color: Colors.deepPurple.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -735,7 +753,7 @@ class _CompactMetricCard extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -808,7 +826,7 @@ class _CompactFeatureCard extends StatelessWidget {
           border: Border.all(color: Colors.grey.shade200),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -821,7 +839,7 @@ class _CompactFeatureCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(9),
               ),
               child: Icon(icon, color: color, size: 20),
