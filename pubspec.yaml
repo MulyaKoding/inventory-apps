@@ -1,16 +1,19 @@
 name: marketplace_inventory
 description: "Aplikasi Inventa dengan Flutter dan MongoDB"
 
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
+
+  # Image picker untuk foto profil
+  image_picker: ^1.1.2
 
   # Environment variables
   flutter_dotenv: ^5.2.1

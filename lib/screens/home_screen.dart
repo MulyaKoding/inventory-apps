@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'inventory_screen.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class HomeScreen extends StatelessWidget {
   final String? userName;
@@ -434,11 +436,118 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final String? userName;
   final VoidCallback? onBack;
 
   const ProfileScreen({super.key, this.userName, this.onBack});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  File? _profileImage;
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploading = false;
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: source,
+        imageQuality: 80,
+        maxWidth: 1000,
+      );
+
+      if (picked == null) return;
+
+      setState(() {
+        _profileImage = File(picked.path);
+        _isUploading = true;
+      });
+
+      // TODO: upload ke server/cloud storage di sini, lalu simpan URL-nya
+      // ke database (field urlPhotoUser) via API call.
+      // Contoh:
+      // final url = await uploadService.uploadProfilePhoto(_profileImage!);
+      // await userService.updateProfilePhoto(url);
+
+      await Future.delayed(const Duration(seconds: 1)); // simulasi upload
+
+      setState(() {
+        _isUploading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Foto profil berhasil diperbarui'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isUploading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memilih foto: $e')),
+        );
+      }
+    }
+  }
+
+  void _showPhotoOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 14),
+              child: Text(
+                'Ubah Foto Profil',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+              ),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined,
+                  color: Color(0xFF8B5CF6)),
+              title: const Text('Ambil Foto'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined,
+                  color: Color(0xFF8B5CF6)),
+              title: const Text('Pilih dari Galeri'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            if (_profileImage != null)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: Colors.red),
+                title: const Text('Hapus Foto',
+                    style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _profileImage = null);
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -451,52 +560,88 @@ class ProfileScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            if (onBack != null) {
-              onBack!();
+            if (widget.onBack != null) {
+              widget.onBack!();
             } else {
               Navigator.pop(context);
             }
           },
         ),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircleAvatar(
-              radius: 60,
-              backgroundColor: Color(0xFF8B5CF6),
-              child: Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 48,
-              ),
+      body: SingleChildScrollView(
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 40),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundColor: const Color(0xFF8B5CF6),
+                      backgroundImage: _profileImage != null
+                          ? FileImage(_profileImage!)
+                          : null,
+                      child: _isUploading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : (_profileImage == null
+                              ? const Icon(Icons.person,
+                                  color: Colors.white, size: 48)
+                              : null),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _isUploading ? null : _showPhotoOptions,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7C3AED),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  widget.userName ?? 'User',
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Profil Pengguna',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: _isUploading ? null : _showPhotoOptions,
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: const Text('Ubah Foto'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF8B5CF6),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            Text(
-              userName ?? 'User',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Profil Pengguna',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 40),
-            const Text(
-              'Menu Profil akan segera hadir.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
