@@ -4,7 +4,13 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
-  final Function(String userName) onLoginPressed;
+  final void Function({
+    required String userId,
+    required String userName,
+    required String userEmail,
+    String? userPhone,
+    String? userPhotoUrl,
+  }) onLoginPressed;
   final VoidCallback? onBackPressed;
 
   const LoginScreen({
@@ -131,16 +137,38 @@ class _LoginScreenState extends State<LoginScreen> {
             !explicitError;
 
         if (success) {
-          // Extract user name from response
-          final userName = data?['user']?['name'] as String?;
+          final user = data?['user'] as Map<String, dynamic>?;
 
-          // Save user name to local storage (SharedPreferences)
-          if (userName != null) {
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('userName', userName);
+          final userId = user?['id'] as String?;
+          final userName = user?['name'] as String?;
+          final userEmail = user?['email'] as String?;
+          final userPhone = user?['phone'] as String?;
+          final userPhotoUrl = user?['urlPhotoUser'] as String?;
+
+          if (userId == null || userName == null || userEmail == null) {
+            setState(() {
+              _errorMessage = 'Data pengguna tidak lengkap dari server';
+            });
+            return;
           }
 
-          widget.onLoginPressed(userName ?? email);
+          // Simpan ke local storage
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('userId', userId);
+          await prefs.setString('userName', userName);
+          await prefs.setString('userEmail', userEmail);
+          if (userPhone != null) await prefs.setString('userPhone', userPhone);
+          if (userPhotoUrl != null) {
+            await prefs.setString('userPhotoUrl', userPhotoUrl);
+          }
+
+          widget.onLoginPressed(
+            userId: userId,
+            userName: userName,
+            userEmail: userEmail,
+            userPhone: userPhone,
+            userPhotoUrl: userPhotoUrl,
+          );
           return;
         }
       }

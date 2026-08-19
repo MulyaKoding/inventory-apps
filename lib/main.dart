@@ -56,7 +56,11 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   // 0 = Landing, 1 = Login, 2 = Dashboard
   int _currentScreen = 0;
+  String? _userId;
   String? _userName;
+  String? _userEmail;
+  String? _userPhone;
+  String? _userPhotoUrl;
 
   void _goToLogin() {
     setState(() {
@@ -70,9 +74,19 @@ class _AuthWrapperState extends State<AuthWrapper> {
     });
   }
 
-  void _handleLogin(String userName) {
+  void _handleLogin({
+    required String userId,
+    required String userName,
+    required String userEmail,
+    String? userPhone,
+    String? userPhotoUrl,
+  }) {
     setState(() {
+      _userId = userId;
       _userName = userName;
+      _userEmail = userEmail;
+      _userPhone = userPhone;
+      _userPhotoUrl = userPhotoUrl;
       _currentScreen = 2;
     });
 
@@ -87,7 +101,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   void _handleLogout() {
     setState(() {
+      _userId = null;
       _userName = null;
+      _userEmail = null;
+      _userPhone = null;
+      _userPhotoUrl = null;
       _currentScreen = 0;
     });
 
@@ -101,14 +119,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    // Screen 0: Landing
     if (_currentScreen == 0) {
-      return LandingScreen(
-        onLoginPressed: _goToLogin,
-      );
+      return LandingScreen(onLoginPressed: _goToLogin);
     }
 
-    // Screen 1: Login
     if (_currentScreen == 1) {
       return LoginScreen(
         onLoginPressed: _handleLogin,
@@ -116,21 +130,32 @@ class _AuthWrapperState extends State<AuthWrapper> {
       );
     }
 
-    // Screen 2: Dashboard (Main Navigation)
     return MainNavigation(
+      userId: _userId,
       userName: _userName,
+      userEmail: _userEmail,
+      userPhone: _userPhone,
+      userPhotoUrl: _userPhotoUrl,
       onLogout: _handleLogout,
     );
   }
 }
 
 class MainNavigation extends StatefulWidget {
+  final String? userId;
   final String? userName;
+  final String? userEmail;
+  final String? userPhone;
+  final String? userPhotoUrl;
   final VoidCallback onLogout;
 
   const MainNavigation({
     super.key,
+    this.userId,
     this.userName,
+    this.userEmail,
+    this.userPhone,
+    this.userPhotoUrl,
     required this.onLogout,
   });
 
@@ -148,15 +173,19 @@ class _MainNavigationState extends State<MainNavigation> {
     super.initState();
     _screens = [
       HomeScreen(
+        userId: widget.userId,
         userName: widget.userName,
+        userEmail: widget.userEmail,
+        userPhone: widget.userPhone,
+        userPhotoUrl: widget.userPhotoUrl,
         onLogout: widget.onLogout,
       ),
       const InventoryScreen(),
       const _FeatureScreen(
-        title: 'Master Barang',
-        subtitle: 'Kelola katalog produk dan SKU',
-        icon: Icons.category_outlined,
-        accentColor: Color(0xFF8B5CF6),
+        title: 'Barang',
+        subtitle: 'Kelola daftar barang dan kategori',
+        icon: Icons.category_rounded,
+        accentColor: Color(0xFF0EA5E9),
       ),
       const _FeatureScreen(
         title: 'Stok',

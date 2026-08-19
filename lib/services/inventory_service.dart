@@ -1,204 +1,122 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/product_model.dart';
-import '../models/marketplace_model.dart';
+
+class InventoryStats {
+  final int totalProducts;
+  final int outOfStock;
+  final double totalValue;
+  final int totalSold;
+
+  InventoryStats({
+    required this.totalProducts,
+    required this.outOfStock,
+    required this.totalValue,
+    required this.totalSold,
+  });
+}
 
 class InventoryService {
-  // Dummy data produk
-  final List<Product> _dummyProducts = [
-    Product(
-      id: '1',
-      name: 'Kaos Polos Putih',
-      sku: 'KPP-001',
-      category: 'Pakaian',
-      stock: 150,
-      price: 75000,
-      status: 'Aktif',
-      marketplaces: ['Tokopedia', 'Shopee'],
-    ),
-    Product(
-      id: '2',
-      name: 'Celana Jeans Slim',
-      sku: 'CJS-002',
-      category: 'Pakaian',
-      stock: 3,
-      price: 250000,
-      status: 'Rendah',
-      marketplaces: ['Shopee'],
-    ),
-    Product(
-      id: '3',
-      name: 'Sepatu Sneakers',
-      sku: 'SS-003',
-      category: 'Sepatu',
-      stock: 0,
-      price: 450000,
-      status: 'Habis',
-      marketplaces: ['Tokopedia', 'Lazada'],
-    ),
-    Product(
-      id: '4',
-      name: 'Tas Ransel Canvas',
-      sku: 'TRC-004',
-      category: 'Tas',
-      stock: 45,
-      price: 180000,
-      status: 'Aktif',
-      marketplaces: ['Tokopedia', 'Shopee', 'Lazada'],
-    ),
-    Product(
-      id: '5',
-      name: 'Jaket Hoodie',
-      sku: 'JH-005',
-      category: 'Pakaian',
-      stock: 0,
-      price: 320000,
-      status: 'Habis',
-      marketplaces: ['Shopee'],
-    ),
-    Product(
-      id: '6',
-      name: 'Topi Baseball',
-      sku: 'TB-006',
-      category: 'Aksesoris',
-      stock: 80,
-      price: 95000,
-      status: 'Aktif',
-      marketplaces: ['Tokopedia'],
-    ),
-    Product(
-      id: '7',
-      name: 'Kemeja Flannel',
-      sku: 'KF-007',
-      category: 'Pakaian',
-      stock: 2,
-      price: 195000,
-      status: 'Rendah',
-      marketplaces: ['Shopee', 'Lazada'],
-    ),
-    Product(
-      id: '8',
-      name: 'Sandal Kulit',
-      sku: 'SK-008',
-      category: 'Sepatu',
-      stock: 60,
-      price: 135000,
-      status: 'Aktif',
-      marketplaces: ['Tokopedia', 'Shopee'],
-    ),
-    Product(
-      id: '9',
-      name: 'Dompet Kulit',
-      sku: 'DK-009',
-      category: 'Aksesoris',
-      stock: 25,
-      price: 210000,
-      status: 'Aktif',
-      marketplaces: ['Lazada'],
-    ),
-    Product(
-      id: '10',
-      name: 'Ikat Pinggang',
-      sku: 'IP-010',
-      category: 'Aksesoris',
-      stock: 4,
-      price: 85000,
-      status: 'Rendah',
-      marketplaces: ['Tokopedia', 'Shopee'],
-    ),
-    Product(
-      id: '11',
-      name: 'Kacamata Hitam',
-      sku: 'KH-011',
-      category: 'Aksesoris',
-      stock: 35,
-      price: 120000,
-      status: 'Aktif',
-      marketplaces: ['Shopee'],
-    ),
-    Product(
-      id: '12',
-      name: 'Sweater Rajut',
-      sku: 'SR-012',
-      category: 'Pakaian',
-      stock: 0,
-      price: 275000,
-      status: 'Habis',
-      marketplaces: ['Tokopedia', 'Lazada'],
-    ),
-  ];
+  static const String baseUrl = 'https://inventory-usr.vercel.app/api/products';
 
+  // GET semua produk
   Future<List<Product>> getAllProducts() async {
-    // Simulasi delay network
-    await Future.delayed(const Duration(milliseconds: 500));
-    return _dummyProducts;
+    final response = await http.get(Uri.parse(baseUrl));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Product.fromJson(json)).toList();
+    } else {
+      throw Exception('Gagal mengambil data produk (${response.statusCode})');
+    }
   }
 
+  // Stats dihitung sendiri di client karena API belum punya endpoint stats
   Future<InventoryStats> getStats() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    final products = await getAllProducts();
 
-    final totalProducts = _dummyProducts.length;
-    final outOfStock =
-        _dummyProducts.where((p) => p.status == 'Habis').length;
-    final totalValue = _dummyProducts.fold<double>(
+    final totalProducts = products.length;
+    final outOfStock = products.where((p) => p.status == 'Out of Stock').length;
+    final totalValue = products.fold<double>(
       0,
       (sum, p) => sum + (p.price * p.stock),
     );
-
-    final marketplaceSet = <String>{};
-    for (final p in _dummyProducts) {
-      marketplaceSet.addAll(p.marketplaces);
-    }
+    final totalSold = products.fold<int>(0, (sum, p) => sum + p.sold);
 
     return InventoryStats(
       totalProducts: totalProducts,
       outOfStock: outOfStock,
       totalValue: totalValue,
-      activeMarketplaces: marketplaceSet.length,
+      totalSold: totalSold,
     );
   }
 
-  Future<String?> addProduct(Product product) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _dummyProducts.add(product);
-    return product.id;
+  // POST tambah produk baru
+  Future<Product> createProduct({
+    required String name,
+    required String category,
+    required String sku,
+    required int stock,
+    required double price,
+  }) async {
+    final response = await http.post(
+      Uri.parse(baseUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'category': category,
+        'sku': sku,
+        'stock': stock,
+        'price': price,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return Product.fromJson(jsonDecode(response.body));
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['error'] ?? 'Gagal menambah produk');
+    }
   }
 
-  Future<bool> updateProduct(String id, Product product) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _dummyProducts.indexWhere((p) => p.id == id);
-    if (index != -1) {
-      _dummyProducts[index] = product;
-      return true;
+  // PUT update produk by id
+  Future<Product> updateProduct({
+    required String id,
+    required String name,
+    required String category,
+    required String sku,
+    required int stock,
+    required double price,
+    required int sold,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'category': category,
+        'sku': sku,
+        'stock': stock,
+        'price': price,
+        'sold': sold,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return Product.fromJson(jsonDecode(response.body));
+    } else {
+      final body = jsonDecode(response.body);
+      throw Exception(body['error'] ?? 'Gagal update produk');
     }
-    return false;
   }
 
-  Future<bool> deleteProduct(String id) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _dummyProducts.indexWhere((p) => p.id == id);
-    if (index != -1) {
-      _dummyProducts.removeAt(index);
-      return true;
-    }
-    return false;
-  }
+  // DELETE produk by id
+  Future<void> deleteProduct(String id) async {
+    final response = await http.delete(Uri.parse('$baseUrl/$id'));
 
-  Future<bool> updateStock(String id, int newStock) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    final index = _dummyProducts.indexWhere((p) => p.id == id);
-    if (index != -1) {
-      final p = _dummyProducts[index];
-      _dummyProducts[index] = Product(
-        id: p.id,
-        name: p.name,
-        sku: p.sku,
-        category: p.category,
-        stock: newStock,
-        price: p.price,
-        status: Product.statusFromStock(newStock),
-        marketplaces: p.marketplaces,
-      );
-      return true;
+    if (response.statusCode != 200) {
+      final body = jsonDecode(response.body);
+      throw Exception(body['error'] ?? 'Gagal menghapus produk');
     }
-    return false;
   }
 }
