@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'inventory_screen.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/user_service.dart';
+import 'master_barang_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   final String? userId;
@@ -12,6 +13,15 @@ class HomeScreen extends StatelessWidget {
   final String? userPhotoUrl;
   final VoidCallback? onLogout;
   final VoidCallback? onBack;
+  // Dipanggil setelah profil berhasil diupdate, supaya parent
+  // (AuthWrapper/MainNavigation) bisa menyimpan data terbaru
+  // dan me-rebuild widget-widget yang menampilkan data user.
+  final void Function({
+    String? userName,
+    String? userEmail,
+    String? userPhone,
+    String? userPhotoUrl,
+  })? onProfileUpdated;
 
   const HomeScreen({
     super.key,
@@ -22,6 +32,7 @@ class HomeScreen extends StatelessWidget {
     this.userPhotoUrl,
     this.onLogout,
     this.onBack,
+    this.onProfileUpdated,
   });
 
   @override
@@ -268,7 +279,7 @@ class HomeScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const InventoryScreen(),
+                              builder: (_) => const MasterBarangScreen(),
                             ),
                           );
                         } else {
@@ -458,6 +469,7 @@ class HomeScreen extends StatelessWidget {
           userPhone: userPhone,
           userPhotoUrl: userPhotoUrl,
           onBack: onBack,
+          onProfileUpdated: onProfileUpdated,
         ),
       ),
     );
@@ -471,6 +483,12 @@ class ProfileScreen extends StatefulWidget {
   final String? userPhone;
   final String? userPhotoUrl;
   final VoidCallback? onBack;
+  final void Function({
+    String? userName,
+    String? userEmail,
+    String? userPhone,
+    String? userPhotoUrl,
+  })? onProfileUpdated;
 
   const ProfileScreen({
     super.key,
@@ -480,6 +498,7 @@ class ProfileScreen extends StatefulWidget {
     this.userPhone,
     this.userPhotoUrl,
     this.onBack,
+    this.onProfileUpdated,
   });
 
   @override
@@ -519,6 +538,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  // Simpan field yang berubah ke SharedPreferences supaya
+  // persist walau app ditutup/dibuka lagi.
+  Future<void> _persistToLocalStorage({
+    String? name,
+    String? email,
+    String? phone,
+    String? photoUrl,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (name != null) await prefs.setString('userName', name);
+    if (email != null) await prefs.setString('userEmail', email);
+    if (phone != null) await prefs.setString('userPhone', phone);
+    if (photoUrl != null) await prefs.setString('userPhotoUrl', photoUrl);
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -563,10 +597,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         urlPhotoUser: photoUrl,
       );
 
+      final newPhotoUrl = updatedUser['urlPhotoUser'] as String? ?? photoUrl;
+
       setState(() {
-        _currentPhotoUrl = updatedUser['urlPhotoUser'] as String?;
+        _currentPhotoUrl = newPhotoUrl;
         _isUploading = false;
       });
+
+      // Simpan ke local storage + bubble ke parent supaya
+      // HomeScreen/AppBar/MainNavigation ikut ter-update.
+      await _persistToLocalStorage(photoUrl: newPhotoUrl);
+      widget.onProfileUpdated?.call(userPhotoUrl: newPhotoUrl);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -640,12 +681,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() => _isSaving = true);
 
+    final newName = _nameController.text.trim();
+    final newEmail = _emailController.text.trim();
+    final newPhone = _phoneController.text.trim();
+
     try {
       await _userService.updateProfile(
         userId: widget.userId!,
-        name: _nameController.text.trim(),
-        email: _emailController.text.trim(),
-        phone: _phoneController.text.trim(),
+        name: newName,
+        email: newEmail,
+        phone: newPhone,
+      );
+
+      // Persist ke local storage supaya bertahan setelah app ditutup.
+      await _persistToLocalStorage(
+        name: newName,
+        email: newEmail,
+        phone: newPhone,
+      );
+
+      // Bubble ke parent (HomeScreen -> MainNavigation -> AuthWrapper)
+      // supaya semua tempat yang menampilkan data user ikut update.
+      widget.onProfileUpdated?.call(
+        userName: newName,
+        userEmail: newEmail,
+        userPhone: newPhone,
       );
 
       setState(() {

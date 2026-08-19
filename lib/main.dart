@@ -99,6 +99,24 @@ class _AuthWrapperState extends State<AuthWrapper> {
     );
   }
 
+  // Dipanggil dari ProfileScreen (lewat HomeScreen -> MainNavigation)
+  // setelah profil berhasil diupdate. Meng-update state di sini supaya
+  // seluruh widget yang menampilkan data user (AppBar, HomeScreen, dll)
+  // ikut ter-refresh dengan data terbaru.
+  void _handleProfileUpdated({
+    String? userName,
+    String? userEmail,
+    String? userPhone,
+    String? userPhotoUrl,
+  }) {
+    setState(() {
+      if (userName != null) _userName = userName;
+      if (userEmail != null) _userEmail = userEmail;
+      if (userPhone != null) _userPhone = userPhone;
+      if (userPhotoUrl != null) _userPhotoUrl = userPhotoUrl;
+    });
+  }
+
   void _handleLogout() {
     setState(() {
       _userId = null;
@@ -137,6 +155,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
       userPhone: _userPhone,
       userPhotoUrl: _userPhotoUrl,
       onLogout: _handleLogout,
+      onProfileUpdated: _handleProfileUpdated,
     );
   }
 }
@@ -148,6 +167,12 @@ class MainNavigation extends StatefulWidget {
   final String? userPhone;
   final String? userPhotoUrl;
   final VoidCallback onLogout;
+  final void Function({
+    String? userName,
+    String? userEmail,
+    String? userPhone,
+    String? userPhotoUrl,
+  })? onProfileUpdated;
 
   const MainNavigation({
     super.key,
@@ -157,6 +182,7 @@ class MainNavigation extends StatefulWidget {
     this.userPhone,
     this.userPhotoUrl,
     required this.onLogout,
+    this.onProfileUpdated,
   });
 
   @override
@@ -166,12 +192,14 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
 
-  late List<Widget> _screens;
-
-  @override
-  void initState() {
-    super.initState();
-    _screens = [
+  // Catatan penting: sebelumnya list ini dibangun sekali saja di
+  // initState(), jadi ketika data user berubah (mis. setelah edit
+  // profil) HomeScreen di dalam list ini tetap memegang data LAMA,
+  // karena initState() tidak dipanggil ulang saat parent rebuild.
+  // Sekarang dibangun di build() supaya selalu memakai data terbaru
+  // dari widget (yang datang dari AuthWrapper).
+  List<Widget> _buildScreens() {
+    return [
       HomeScreen(
         userId: widget.userId,
         userName: widget.userName,
@@ -179,6 +207,7 @@ class _MainNavigationState extends State<MainNavigation> {
         userPhone: widget.userPhone,
         userPhotoUrl: widget.userPhotoUrl,
         onLogout: widget.onLogout,
+        onProfileUpdated: widget.onProfileUpdated,
       ),
       const InventoryScreen(),
       const _FeatureScreen(
@@ -199,6 +228,7 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     bool isIOS = Platform.isIOS;
+    final screens = _buildScreens();
 
     if (isIOS) {
       return CupertinoTabScaffold(
@@ -230,7 +260,7 @@ class _MainNavigationState extends State<MainNavigation> {
         ),
         tabBuilder: (context, index) {
           return CupertinoTabView(
-            builder: (context) => _screens[index],
+            builder: (context) => screens[index],
           );
         },
       );
@@ -238,7 +268,7 @@ class _MainNavigationState extends State<MainNavigation> {
       return Scaffold(
         body: IndexedStack(
           index: _selectedIndex,
-          children: _screens,
+          children: screens,
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,
