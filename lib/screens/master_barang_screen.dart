@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
 
 /// =====================================================================
-/// MASTER BARANG SCREEN
-/// Rombak UI mengikuti tampilan web (Satuan, Pabrik, Merek, Supplier,
-/// Buat Barang) tapi tetap pakai bahasa desain aplikasi Flutter kamu
-/// (ungu / putih, bukan dark navy seperti di web).
+/// MASTER BARANG SCREEN — REDESIGN (tanpa TabBar)
 ///
-/// Cara pakai (dari HomeScreen, ganti tujuan "Master Barang"):
+/// Sebelumnya UI pakai TabBar 5 tab yang jadi sempit & sesak di layar HP.
+/// Sekarang polanya jadi "dashboard -> halaman detail":
+///   1. Layar utama nampilin ringkasan (Total Barang) + menu kartu
+///      (Satuan, Pabrik, Merek, Supplier, Buat Barang).
+///   2. Tap salah satu kartu -> masuk ke halaman form tersendiri
+///      (full screen, ada tombol back), lengkap dengan daftar data
+///      yang sudah disimpan supaya user langsung lihat hasilnya.
+///
+/// Cara pakai (dari HomeScreen):
 ///
 ///   Navigator.push(
 ///     context,
 ///     MaterialPageRoute(builder: (_) => const MasterBarangScreen()),
 ///   );
-///
-/// Kalau kamu sudah punya data toko dari service, tinggal isi
-/// parameter `tokoList` supaya dropdown "Toko Tujuan" otomatis terisi.
 /// =====================================================================
 
 const _kPrimary = Color(0xFF8B5CF6);
 const _kPrimaryDark = Color(0xFF7C3AED);
+const _kBg = Color(0xFFF8F7FC);
 
 // ----------------------------- MODELS ------------------------------
 
@@ -109,7 +112,7 @@ class BarangItem {
   });
 }
 
-// ----------------------------- SCREEN -------------------------------
+// ----------------------------- MAIN SCREEN -------------------------------
 
 class MasterBarangScreen extends StatefulWidget {
   /// Daftar nama toko untuk dropdown "Toko Tujuan". Kosongkan kalau
@@ -122,41 +125,75 @@ class MasterBarangScreen extends StatefulWidget {
   State<MasterBarangScreen> createState() => _MasterBarangScreenState();
 }
 
-class _MasterBarangScreenState extends State<MasterBarangScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-
+class _MasterBarangScreenState extends State<MasterBarangScreen> {
   final List<SatuanItem> _satuanList = [];
   final List<PabrikItem> _pabrikList = [];
   final List<MerekItem> _merekList = [];
   final List<SupplierItem> _supplierList = [];
   final List<BarangItem> _barangList = [];
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+  Future<void> _openScreen(Widget screen) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    if (mounted) setState(() {}); // refresh counts on the dashboard
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+  void _openSatuan() => _openScreen(_DetailPage(
+        title: 'Satuan Barang',
+        child: _SatuanForm(
+          items: _satuanList,
+          onSaved: (item) => setState(() => _satuanList.add(item)),
+          onDelete: (item) => setState(() => _satuanList.remove(item)),
+        ),
+      ));
 
-  void _snack(String msg, {bool error = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: error ? Colors.red : Colors.green,
-      ),
-    );
-  }
+  void _openPabrik() => _openScreen(_DetailPage(
+        title: 'Pabrik',
+        child: _PabrikForm(
+          tokoList: widget.tokoList,
+          items: _pabrikList,
+          onSaved: (item) => setState(() => _pabrikList.add(item)),
+          onDelete: (item) => setState(() => _pabrikList.remove(item)),
+        ),
+      ));
+
+  void _openMerek() => _openScreen(_DetailPage(
+        title: 'Merek',
+        child: _MerekForm(
+          tokoList: widget.tokoList,
+          pabrikList: _pabrikList,
+          items: _merekList,
+          onSaved: (item) => setState(() => _merekList.add(item)),
+          onDelete: (item) => setState(() => _merekList.remove(item)),
+        ),
+      ));
+
+  void _openSupplier() => _openScreen(_DetailPage(
+        title: 'Supplier',
+        child: _SupplierForm(
+          tokoList: widget.tokoList,
+          items: _supplierList,
+          onSaved: (item) => setState(() => _supplierList.add(item)),
+          onDelete: (item) => setState(() => _supplierList.remove(item)),
+        ),
+      ));
+
+  void _openBuatBarang() => _openScreen(_DetailPage(
+        title: 'Buat Barang',
+        child: _BuatBarangForm(
+          tokoList: widget.tokoList,
+          satuanList: _satuanList,
+          merekList: _merekList,
+          supplierList: _supplierList,
+          items: _barangList,
+          onSaved: (item) => setState(() => _barangList.add(item)),
+          onDelete: (item) => setState(() => _barangList.remove(item)),
+        ),
+      ));
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: _kBg,
       appBar: AppBar(
         title: const Text(
           'Master Barang',
@@ -166,85 +203,102 @@ class _MasterBarangScreenState extends State<MasterBarangScreen>
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: _StatsRow(
-              satuan: _satuanList.length,
-              pabrik: _pabrikList.length,
-              merek: _merekList.length,
-              supplier: _supplierList.length,
-              totalBarang: _barangList.length,
-            ),
+          _HeroStat(total: _barangList.length),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _MiniStat(
+                  label: 'Satuan',
+                  value: _satuanList.length,
+                  color: _kPrimaryDark,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MiniStat(
+                  label: 'Pabrik',
+                  value: _pabrikList.length,
+                  color: const Color(0xFF059669),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MiniStat(
+                  label: 'Merek',
+                  value: _merekList.length,
+                  color: const Color(0xFF7C3AED),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MiniStat(
+                  label: 'Supplier',
+                  value: _supplierList.length,
+                  color: const Color(0xFFD97706),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Kelola Data Master',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              labelColor: _kPrimaryDark,
-              unselectedLabelColor: Colors.grey[600],
-              indicatorColor: _kPrimaryDark,
-              indicatorWeight: 3,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-              tabs: const [
-                Tab(text: 'Satuan'),
-                Tab(text: 'Pabrik'),
-                Tab(text: 'Merek'),
-                Tab(text: 'Supplier'),
-                Tab(text: 'Buat Barang'),
-              ],
-            ),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 1.25,
+            children: [
+              _MenuCard(
+                icon: Icons.straighten_rounded,
+                label: 'Satuan',
+                count: _satuanList.length,
+                color: _kPrimaryDark,
+                onTap: _openSatuan,
+              ),
+              _MenuCard(
+                icon: Icons.factory_outlined,
+                label: 'Pabrik',
+                count: _pabrikList.length,
+                color: const Color(0xFF059669),
+                onTap: _openPabrik,
+              ),
+              _MenuCard(
+                icon: Icons.sell_outlined,
+                label: 'Merek',
+                count: _merekList.length,
+                color: const Color(0xFF7C3AED),
+                onTap: _openMerek,
+              ),
+              _MenuCard(
+                icon: Icons.local_shipping_outlined,
+                label: 'Supplier',
+                count: _supplierList.length,
+                color: const Color(0xFFD97706),
+                onTap: _openSupplier,
+              ),
+            ],
           ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _SatuanForm(onSaved: (item) {
-                  setState(() => _satuanList.add(item));
-                  _snack('Satuan berhasil disimpan');
-                }),
-                _PabrikForm(
-                  tokoList: widget.tokoList,
-                  onSaved: (item) {
-                    setState(() => _pabrikList.add(item));
-                    _snack('Pabrik berhasil disimpan');
-                  },
-                ),
-                _MerekForm(
-                  tokoList: widget.tokoList,
-                  pabrikList: _pabrikList,
-                  onSaved: (item) {
-                    setState(() => _merekList.add(item));
-                    _snack('Merek berhasil disimpan');
-                  },
-                ),
-                _SupplierForm(
-                  tokoList: widget.tokoList,
-                  onSaved: (item) {
-                    setState(() => _supplierList.add(item));
-                    _snack('Supplier berhasil disimpan');
-                  },
-                ),
-                _BuatBarangForm(
-                  tokoList: widget.tokoList,
-                  satuanList: _satuanList,
-                  merekList: _merekList,
-                  supplierList: _supplierList,
-                  onSaved: (item) {
-                    setState(() => _barangList.add(item));
-                    _snack('Barang berhasil disimpan');
-                  },
-                ),
-              ],
-            ),
+          const SizedBox(height: 24),
+          const Text(
+            'Barang',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          _PrimaryActionCard(
+            icon: Icons.add_box_rounded,
+            title: 'Tambah Barang Baru',
+            subtitle: 'Buat data barang lengkap dengan satuan, merek, '
+                'supplier, harga & stok minimum',
+            onTap: _openBuatBarang,
           ),
         ],
       ),
@@ -252,100 +306,96 @@ class _MasterBarangScreenState extends State<MasterBarangScreen>
   }
 }
 
-// --------------------------- STATS ROW -------------------------------
+// --------------------------- DETAIL PAGE WRAPPER ------------------------
 
-class _StatsRow extends StatelessWidget {
-  final int satuan;
-  final int pabrik;
-  final int merek;
-  final int supplier;
-  final int totalBarang;
-
-  const _StatsRow({
-    required this.satuan,
-    required this.pabrik,
-    required this.merek,
-    required this.supplier,
-    required this.totalBarang,
-  });
+/// Bungkus semua form jadi halaman tersendiri (bukan tab) supaya
+/// tiap kategori terasa lega & fokus, dengan tombol back standar.
+class _DetailPage extends StatelessWidget {
+  final String title;
+  final Widget child;
+  const _DetailPage({required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      ('SATUAN', satuan, _kPrimaryDark),
-      ('PABRIK', pabrik, const Color(0xFF059669)),
-      ('MEREK', merek, const Color(0xFF7C3AED)),
-      ('SUPPLIER', supplier, const Color(0xFFD97706)),
-      ('TOTAL BARANG', totalBarang, const Color(0xFF059669)),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 600;
-        return GridView.count(
-          crossAxisCount: isNarrow ? 2 : 5,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-          childAspectRatio: isNarrow ? 1.6 : 1.3,
-          children: items
-              .map((e) => _StatCard(label: e.$1, value: e.$2, color: e.$3))
-              .toList(),
-        );
-      },
+    return Scaffold(
+      backgroundColor: _kBg,
+      appBar: AppBar(
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 0,
+      ),
+      body: child,
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final String label;
-  final int value;
-  final Color color;
+// ---------------------------- DASHBOARD WIDGETS --------------------------
 
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+class _HeroStat extends StatelessWidget {
+  final int total;
+  const _HeroStat({required this.total});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border(top: BorderSide(color: color, width: 3)),
+        gradient: const LinearGradient(
+          colors: [_kPrimary, _kPrimaryDark],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: _kPrimaryDark.withValues(alpha: 0.28),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Colors.grey[500],
-              letterSpacing: 0.5,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'TOTAL BARANG',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '$total',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'produk terdaftar di sistem',
+                  style: TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            '$value',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: Colors.black87,
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
             ),
+            child: const Icon(Icons.inventory_2_rounded,
+                color: Colors.white, size: 30),
           ),
         ],
       ),
@@ -353,7 +403,183 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-// ------------------------- SHARED WIDGETS -----------------------------
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color color;
+  const _MiniStat(
+      {required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        children: [
+          Text(
+            '$value',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10.5, color: Colors.grey[600]),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int count;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _MenuCard({
+    required this.icon,
+    required this.label,
+    required this.count,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const Spacer(),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '$count data',
+                style: TextStyle(fontSize: 11.5, color: Colors.grey[500]),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _PrimaryActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [_kPrimary, _kPrimaryDark],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios_rounded,
+                  color: Colors.white, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ------------------------- SHARED FORM WIDGETS -----------------------------
 
 class _FormScaffold extends StatelessWidget {
   final String title;
@@ -361,6 +587,7 @@ class _FormScaffold extends StatelessWidget {
   final VoidCallback onCancel;
   final VoidCallback onSave;
   final String saveLabel;
+  final Widget? footer;
 
   const _FormScaffold({
     required this.title,
@@ -368,6 +595,7 @@ class _FormScaffold extends StatelessWidget {
     required this.onCancel,
     required this.onSave,
     required this.saveLabel,
+    this.footer,
   });
 
   @override
@@ -377,40 +605,187 @@ class _FormScaffold extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
                   title,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-              TextButton(onPressed: onCancel, child: const Text('Batal')),
-              const SizedBox(width: 8),
-              ElevatedButton.icon(
-                onPressed: onSave,
-                icon: const Icon(Icons.check, size: 18),
-                label: Text(saveLabel),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _kPrimaryDark,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                const SizedBox(height: 16),
+                child,
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: onCancel,
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          side: BorderSide(color: Colors.grey.shade300),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text('Batal',
+                            style: TextStyle(color: Colors.black87)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: ElevatedButton.icon(
+                        onPressed: onSave,
+                        icon: const Icon(Icons.check, size: 18),
+                        label: Text(saveLabel),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _kPrimaryDark,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          child,
+          if (footer != null) ...[
+            const SizedBox(height: 20),
+            footer!,
+          ],
         ],
       ),
+    );
+  }
+}
+
+/// Daftar data yang sudah tersimpan, ditampilkan di bawah form supaya
+/// user langsung dapat feedback visual (bukan cuma snackbar sekilas).
+class _EntryListSection<T> extends StatelessWidget {
+  final String title;
+  final List<T> items;
+  final Color color;
+  final IconData icon;
+  final String Function(T) titleOf;
+  final String Function(T) subtitleOf;
+  final ValueChanged<T> onDelete;
+
+  const _EntryListSection({
+    required this.title,
+    required this.items,
+    required this.color,
+    required this.icon,
+    required this.titleOf,
+    required this.subtitleOf,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${items.length}',
+                style: TextStyle(
+                    fontSize: 11, fontWeight: FontWeight.w700, color: color),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (items.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.grey.shade200),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.inbox_outlined, color: Colors.grey[300], size: 30),
+                const SizedBox(height: 6),
+                Text('Belum ada data',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12.5)),
+              ],
+            ),
+          )
+        else
+          ...items.map(
+            (e) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: color, size: 16),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(titleOf(e),
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600)),
+                        if (subtitleOf(e).isNotEmpty)
+                          Text(subtitleOf(e),
+                              style: TextStyle(
+                                  fontSize: 11.5, color: Colors.grey[500])),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => onDelete(e),
+                    icon: const Icon(Icons.delete_outline, size: 19),
+                    color: Colors.grey[400],
+                    splashRadius: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -466,7 +841,7 @@ class _LabeledField extends StatelessWidget {
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: _kBg,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             border: OutlineInputBorder(
@@ -528,7 +903,7 @@ class _TokoTujuanField extends StatelessWidget {
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: _kBg,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: hasToko ? Colors.grey.shade300 : Colors.red.shade200,
@@ -602,7 +977,7 @@ class _LabeledDropdown<T> extends StatelessWidget {
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: _kBg,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.grey.shade300),
                 ),
@@ -669,11 +1044,14 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// ----------------------------- TAB 1: SATUAN --------------------------
+// ----------------------------- FORM 1: SATUAN --------------------------
 
 class _SatuanForm extends StatefulWidget {
+  final List<SatuanItem> items;
   final ValueChanged<SatuanItem> onSaved;
-  const _SatuanForm({required this.onSaved});
+  final ValueChanged<SatuanItem> onDelete;
+  const _SatuanForm(
+      {required this.items, required this.onSaved, required this.onDelete});
 
   @override
   State<_SatuanForm> createState() => _SatuanFormState();
@@ -703,6 +1081,7 @@ class _SatuanFormState extends State<_SatuanForm> {
       keterangan: _keterangan.text.trim(),
     ));
     _clear();
+    setState(() {});
   }
 
   @override
@@ -720,6 +1099,15 @@ class _SatuanFormState extends State<_SatuanForm> {
       onCancel: _clear,
       onSave: _save,
       saveLabel: 'Simpan Satuan',
+      footer: _EntryListSection<SatuanItem>(
+        title: 'Daftar Satuan',
+        items: widget.items,
+        color: _kPrimaryDark,
+        icon: Icons.straighten_rounded,
+        titleOf: (e) => '${e.nama} (${e.kode})',
+        subtitleOf: (e) => e.keterangan,
+        onDelete: (e) => setState(() => widget.onDelete(e)),
+      ),
       child: Column(
         children: [
           Row(
@@ -757,12 +1145,19 @@ class _SatuanFormState extends State<_SatuanForm> {
   }
 }
 
-// ----------------------------- TAB 2: PABRIK ---------------------------
+// ----------------------------- FORM 2: PABRIK ---------------------------
 
 class _PabrikForm extends StatefulWidget {
   final List<String> tokoList;
+  final List<PabrikItem> items;
   final ValueChanged<PabrikItem> onSaved;
-  const _PabrikForm({required this.tokoList, required this.onSaved});
+  final ValueChanged<PabrikItem> onDelete;
+  const _PabrikForm({
+    required this.tokoList,
+    required this.items,
+    required this.onSaved,
+    required this.onDelete,
+  });
 
   @override
   State<_PabrikForm> createState() => _PabrikFormState();
@@ -802,6 +1197,7 @@ class _PabrikFormState extends State<_PabrikForm> {
       alamat: _alamat.text.trim(),
     ));
     _clear();
+    setState(() {});
   }
 
   @override
@@ -821,6 +1217,16 @@ class _PabrikFormState extends State<_PabrikForm> {
       onCancel: _clear,
       onSave: _save,
       saveLabel: 'Simpan Pabrik',
+      footer: _EntryListSection<PabrikItem>(
+        title: 'Daftar Pabrik',
+        items: widget.items,
+        color: const Color(0xFF059669),
+        icon: Icons.factory_outlined,
+        titleOf: (e) => e.nama.isNotEmpty ? '${e.nama} (${e.kode})' : e.kode,
+        subtitleOf: (e) =>
+            [e.kota, e.telepon].where((s) => s.isNotEmpty).join(' • '),
+        onDelete: (e) => setState(() => widget.onDelete(e)),
+      ),
       child: Column(
         children: [
           _TokoTujuanField(
@@ -885,16 +1291,20 @@ class _PabrikFormState extends State<_PabrikForm> {
   }
 }
 
-// ----------------------------- TAB 3: MEREK ----------------------------
+// ----------------------------- FORM 3: MEREK ----------------------------
 
 class _MerekForm extends StatefulWidget {
   final List<String> tokoList;
   final List<PabrikItem> pabrikList;
+  final List<MerekItem> items;
   final ValueChanged<MerekItem> onSaved;
+  final ValueChanged<MerekItem> onDelete;
   const _MerekForm({
     required this.tokoList,
     required this.pabrikList,
+    required this.items,
     required this.onSaved,
+    required this.onDelete,
   });
 
   @override
@@ -930,6 +1340,7 @@ class _MerekFormState extends State<_MerekForm> {
       pabrik: _pabrik,
     ));
     _clear();
+    setState(() {});
   }
 
   @override
@@ -946,6 +1357,15 @@ class _MerekFormState extends State<_MerekForm> {
       onCancel: _clear,
       onSave: _save,
       saveLabel: 'Simpan Merek',
+      footer: _EntryListSection<MerekItem>(
+        title: 'Daftar Merek',
+        items: widget.items,
+        color: const Color(0xFF7C3AED),
+        icon: Icons.sell_outlined,
+        titleOf: (e) => e.nama.isNotEmpty ? '${e.nama} (${e.kode})' : e.kode,
+        subtitleOf: (e) => e.pabrik ?? '',
+        onDelete: (e) => setState(() => widget.onDelete(e)),
+      ),
       child: Column(
         children: [
           _TokoTujuanField(
@@ -986,7 +1406,7 @@ class _MerekFormState extends State<_MerekForm> {
             onAdd: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                    content: Text('Buka tab Pabrik untuk menambah data baru')),
+                    content: Text('Buka menu Pabrik untuk menambah data baru')),
               );
             },
           ),
@@ -996,12 +1416,19 @@ class _MerekFormState extends State<_MerekForm> {
   }
 }
 
-// ---------------------------- TAB 4: SUPPLIER ---------------------------
+// ---------------------------- FORM 4: SUPPLIER ---------------------------
 
 class _SupplierForm extends StatefulWidget {
   final List<String> tokoList;
+  final List<SupplierItem> items;
   final ValueChanged<SupplierItem> onSaved;
-  const _SupplierForm({required this.tokoList, required this.onSaved});
+  final ValueChanged<SupplierItem> onDelete;
+  const _SupplierForm({
+    required this.tokoList,
+    required this.items,
+    required this.onSaved,
+    required this.onDelete,
+  });
 
   @override
   State<_SupplierForm> createState() => _SupplierFormState();
@@ -1050,6 +1477,7 @@ class _SupplierFormState extends State<_SupplierForm> {
       alamat: _alamat.text.trim(),
     ));
     _clear();
+    setState(() {});
   }
 
   @override
@@ -1071,6 +1499,16 @@ class _SupplierFormState extends State<_SupplierForm> {
       onCancel: _clear,
       onSave: _save,
       saveLabel: 'Simpan Supplier',
+      footer: _EntryListSection<SupplierItem>(
+        title: 'Daftar Supplier',
+        items: widget.items,
+        color: const Color(0xFFD97706),
+        icon: Icons.local_shipping_outlined,
+        titleOf: (e) => '${e.nama} (${e.kode})',
+        subtitleOf: (e) =>
+            [e.kontakPerson, e.telepon].where((s) => s.isNotEmpty).join(' • '),
+        onDelete: (e) => setState(() => widget.onDelete(e)),
+      ),
       child: Column(
         children: [
           _TokoTujuanField(
@@ -1158,21 +1596,25 @@ class _SupplierFormState extends State<_SupplierForm> {
   }
 }
 
-// --------------------------- TAB 5: BUAT BARANG --------------------------
+// --------------------------- FORM 5: BUAT BARANG --------------------------
 
 class _BuatBarangForm extends StatefulWidget {
   final List<String> tokoList;
   final List<SatuanItem> satuanList;
   final List<MerekItem> merekList;
   final List<SupplierItem> supplierList;
+  final List<BarangItem> items;
   final ValueChanged<BarangItem> onSaved;
+  final ValueChanged<BarangItem> onDelete;
 
   const _BuatBarangForm({
     required this.tokoList,
     required this.satuanList,
     required this.merekList,
     required this.supplierList,
+    required this.items,
     required this.onSaved,
+    required this.onDelete,
   });
 
   @override
@@ -1247,6 +1689,7 @@ class _BuatBarangFormState extends State<_BuatBarangForm> {
       status: _status,
     ));
     _clear();
+    setState(() {});
   }
 
   @override
@@ -1267,6 +1710,19 @@ class _BuatBarangFormState extends State<_BuatBarangForm> {
       onCancel: _clear,
       onSave: _save,
       saveLabel: 'Simpan Barang',
+      footer: _EntryListSection<BarangItem>(
+        title: 'Daftar Barang',
+        items: widget.items,
+        color: _kPrimaryDark,
+        icon: Icons.inventory_2_outlined,
+        titleOf: (e) => '${e.namaBarang} (${e.kodeBarang})',
+        subtitleOf: (e) => [
+          if (e.satuan != null) e.satuan!,
+          if (e.merek != null) e.merek!,
+          'Rp ${e.hargaJual.toStringAsFixed(0)}',
+        ].join(' • '),
+        onDelete: (e) => setState(() => widget.onDelete(e)),
+      ),
       child: Column(
         children: [
           _TokoTujuanField(
@@ -1336,7 +1792,7 @@ class _BuatBarangFormState extends State<_BuatBarangForm> {
                   onAdd: () => ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                         content:
-                            Text('Buka tab Satuan untuk menambah data baru')),
+                            Text('Buka menu Satuan untuk menambah data baru')),
                   ),
                 ),
               ),
@@ -1352,7 +1808,7 @@ class _BuatBarangFormState extends State<_BuatBarangForm> {
                   onAdd: () => ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                         content:
-                            Text('Buka tab Merek untuk menambah data baru')),
+                            Text('Buka menu Merek untuk menambah data baru')),
                   ),
                 ),
               ),
@@ -1368,7 +1824,7 @@ class _BuatBarangFormState extends State<_BuatBarangForm> {
             onChanged: (v) => setState(() => _supplier = v),
             onAdd: () => ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('Buka tab Supplier untuk menambah data baru')),
+                  content: Text('Buka menu Supplier untuk menambah data baru')),
             ),
           ),
           const _SectionHeader('Harga & Stok'),
